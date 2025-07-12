@@ -1,5 +1,11 @@
 # @devscast/queryzen
 
+## 1.0.1
+
+### Patch Changes
+
+- add opensource related documents
+
 ## 1.0.0
 
 ### Major Changes

@@ -2,8 +2,8 @@
 
 ![npm](https://img.shields.io/npm/v/@devscast/queryzen?style=flat-square)
 ![npm](https://img.shields.io/npm/dt/@devscast/queryzen?style=flat-square)
-![Lint](https://github.com/devscast/queryzen-ts/actions/workflows/lint.yml/badge.svg)
-![Test](https://github.com/devscast/queryzen-ts/actions/workflows/test.yml/badge.svg)
+[![Lint](https://github.com/devscast/queryzen-ts/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/devscast/queryzen-ts/actions/workflows/lint.yml)
+[![Tests](https://github.com/devscast/queryzen-ts/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/devscast/queryzen-ts/actions/workflows/test.yml)
 ![GitHub](https://img.shields.io/github/license/devscast/queryzen-ts?style=flat-square)
 
 ---
