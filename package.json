@@ -24,15 +24,11 @@
     "lint:fix": "eslint ./src --fix",
     "check-types": "tsc --noEmit",
     "=========== NPM PUBLISH ==============": "",
-    "release": "npm run build && changeset publish",
-    "version-packages": "changeset version && npm run format"
+    "release": "npm publish --access public",
+    "version": "changeset version"
   },
   "lint-staged": {
     "*.ts": [
-      "prettier --write",
-      "eslint --fix"
-    ],
-    "*.tsx": [
       "prettier --write",
       "eslint --fix"
     ]
@@ -48,6 +44,7 @@
     }
   },
   "keywords": [
+    "sql",
     "mysql",
     "query",
     "builder",
@@ -56,7 +53,7 @@
   ],
   "author": "Bernard Ngandu <bernard@devscast.tech>",
   "license": "MIT",
-  "description": "Typescript SQL Query Builder inspired by Doctrine DBAL",
+  "description": "QueryZen : TypeScript SQL Query Builder inspired by Doctrine DBAL",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/devscast/queryzen-ts.git"
