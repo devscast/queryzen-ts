@@ -1,0 +1,9 @@
+export enum ParameterType {
+  NULL = "NULL",
+  INTEGER = "INTEGER",
+  STRING = "STRING",
+  LARGE_OBJECT = "LARGE_OBJECT",
+  BOOLEAN = "BOOLEAN",
+  BINARY = "BINARY",
+  ASCII = "ASCII",
+}

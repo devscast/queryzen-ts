@@ -1,0 +1,1 @@
+npm run check-types && npm run check && npm run lint:check && npm run test
