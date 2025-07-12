@@ -472,19 +472,27 @@ export class QueryBuilder {
       if (predicates.length === 0) {
         return currentPredicate;
       }
-
       const [head, ...rest] = predicates;
-      return currentPredicate.with(head, ...rest);
+      if (head === undefined) {
+        return currentPredicate;
+      }
+      return currentPredicate.with(head, ...rest.filter(p => p !== undefined));
     }
 
     if (currentPredicate !== null) {
       predicates.unshift(currentPredicate);
     } else if (predicates.length === 1) {
+      if (predicates[0] === undefined) {
+        throw new Error("Predicate cannot be undefined");
+      }
       return predicates[0];
     }
 
     const [first, ...others] = predicates;
-    return new CompositeExpression(type, first, ...others);
+    if (first === undefined) {
+      throw new Error("Predicate cannot be undefined");
+    }
+    return new CompositeExpression(type, first, ...others.filter(p => p !== undefined));
   }
 
   /**
@@ -556,7 +564,10 @@ export class QueryBuilder {
     const selectParts: string[] = [];
     if (this.commonTableExpressions.length > 0 && this.platform) {
       const [expression, ...rest] = this.commonTableExpressions;
-      selectParts.push(this.platform.createWithSQLBuilder().buildSQL(expression, ...rest));
+      if (!expression) {
+        throw new Error("CommonTableExpression cannot be undefined");
+      }
+      selectParts.push(this.platform.createWithSQLBuilder().buildSQL(expression, ...rest.filter(e => e !== undefined)));
     }
 
     if (this.platform) {

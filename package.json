@@ -1,8 +1,14 @@
 {
   "name": "@devscast/queryzen",
-  "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "version": "0.0.0",
+  "source": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -16,7 +22,10 @@
     "format": "prettier ./src --write",
     "lint:check": "eslint ./src --debug",
     "lint:fix": "eslint ./src --fix",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "=========== NPM PUBLISH ==============": "",
+    "release": "npm run build && changeset publish",
+    "version-packages": "changeset version && npm run format"
   },
   "lint-staged": {
     "*.ts": [
@@ -45,18 +54,19 @@
     "orm",
     "dbal"
   ],
-  "author": "Bernard Ngandu bernard@ngandu.dev",
+  "author": "Bernard Ngandu <bernard@devscast.tech>",
   "license": "MIT",
-  "description": "A simple Mysql Query Builder inspired by Doctrine DBAL",
+  "description": "Typescript SQL Query Builder inspired by Doctrine DBAL",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/devscast/mysql-query-builder.git"
+    "url": "git+https://github.com/devscast/queryzen-ts.git"
   },
   "bugs": {
-    "url": "https://github.com/devscast/mysql-query-builder/issues"
+    "url": "https://github.com/devscast/queryzen-ts/issues"
   },
-  "homepage": "https://github.com/devscast/mysql-query-builder#readme",
+  "homepage": "https://github.com/devscast/queryzen-ts#readme",
   "devDependencies": {
+    "@changesets/cli": "^2.29.5",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@types/node": "^24.0.13",

@@ -240,10 +240,15 @@ var CompositeExpression = class _CompositeExpression {
     return new _CompositeExpression("OR", part, ...parts);
   }
   with(part, ...parts) {
-    const newParts = [...this.parts, part, ...parts];
-    const copy = new _CompositeExpression(this.type, newParts[0]);
-    copy.parts.splice(1, 0, ...newParts.slice(1));
-    return copy;
+    const newParts = [...this.parts, part, ...parts].filter((p) => p !== void 0);
+    if (newParts.length === 0) {
+      throw new Error("CompositeExpression.with() requires at least one part");
+    }
+    const [first, ...restParts] = newParts;
+    if (first === void 0) {
+      throw new Error("CompositeExpression.with() requires at least one valid part");
+    }
+    return new _CompositeExpression(this.type, first, ...restParts);
   }
   getType() {
     return this.type;
@@ -765,15 +770,24 @@ var QueryBuilder = class {
         return currentPredicate;
       }
       const [head, ...rest] = predicates;
-      return currentPredicate.with(head, ...rest);
+      if (head === void 0) {
+        return currentPredicate;
+      }
+      return currentPredicate.with(head, ...rest.filter((p) => p !== void 0));
     }
     if (currentPredicate !== null) {
       predicates.unshift(currentPredicate);
     } else if (predicates.length === 1) {
+      if (predicates[0] === void 0) {
+        throw new Error("Predicate cannot be undefined");
+      }
       return predicates[0];
     }
     const [first, ...others] = predicates;
-    return new CompositeExpression(type, first, ...others);
+    if (first === void 0) {
+      throw new Error("Predicate cannot be undefined");
+    }
+    return new CompositeExpression(type, first, ...others.filter((p) => p !== void 0));
   }
   /**
    * Specifies an ordering for the query results.
@@ -833,7 +847,10 @@ var QueryBuilder = class {
     const selectParts = [];
     if (this.commonTableExpressions.length > 0 && this.platform) {
       const [expression, ...rest] = this.commonTableExpressions;
-      selectParts.push(this.platform.createWithSQLBuilder().buildSQL(expression, ...rest));
+      if (!expression) {
+        throw new Error("CommonTableExpression cannot be undefined");
+      }
+      selectParts.push(this.platform.createWithSQLBuilder().buildSQL(expression, ...rest.filter((e) => e !== void 0)));
     }
     if (this.platform) {
       selectParts.push(

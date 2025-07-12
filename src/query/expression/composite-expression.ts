@@ -21,10 +21,16 @@ export class CompositeExpression {
   }
 
   with(part: CompositeExpression | string, ...parts: (CompositeExpression | string)[]): CompositeExpression {
-    const newParts = [...this.parts, part, ...parts];
-    const copy = new CompositeExpression(this.type, newParts[0]);
-    copy.parts.splice(1, 0, ...newParts.slice(1)); // maintain original order
-    return copy;
+    const newParts = [...this.parts, part, ...parts].filter((p): p is CompositeExpression | string => p !== undefined);
+    if (newParts.length === 0) {
+      throw new Error("CompositeExpression.with() requires at least one part");
+    }
+    const [first, ...restParts] = newParts;
+    if (first === undefined) {
+      throw new Error("CompositeExpression.with() requires at least one valid part");
+    }
+
+    return new CompositeExpression(this.type, first, ...restParts);
   }
 
   getType(): "AND" | "OR" {
