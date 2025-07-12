@@ -1,5 +1,11 @@
 # @devscast/queryzen
 
+## 1.0.2
+
+### Patch Changes
+
+- fix publish automation process
+
 ## 1.0.1
 
 ### Patch Changes
