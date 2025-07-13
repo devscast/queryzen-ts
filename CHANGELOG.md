@@ -1,5 +1,11 @@
 # @devscast/queryzen
 
+## 1.0.5
+
+### Patch Changes
+
+- support multliple placeholder for upsert
+
 ## 1.0.4
 
 ### Patch Changes
