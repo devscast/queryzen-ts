@@ -272,6 +272,26 @@ export class QueryBuilder {
   }
 
   /**
+   * Turns the query being built into an upsert query that inserts or updates
+   * a certain table with the given data record.
+   */
+  public upsert<T extends Record<string, any>>(table: string, data: T, mode: "insert" | "update" = "insert"): this {
+    mode === "insert" ? this.insert(table) : this.update(table);
+
+    if (!data || Object.keys(data).length === 0) {
+      throw new QueryException("Insufficient data given for upsert operation. Data cannot be empty.");
+    }
+
+    const columns = Object.keys(data);
+    columns.forEach((column: string) => {
+      mode === "insert" ? this.setValue(column, "?") : this.set(column, "?");
+      this.createPositionalParameter(data[column], ParameterType.STRING);
+    });
+
+    return this;
+  }
+
+  /**
    * Turns the query being built into an insert query that inserts into
    * a certain table
    */

@@ -718,4 +718,32 @@ describe("QueryBuilder", () => {
     qb.union("SELECT 1 AS field_one").addUnion("SELECT 2 as field_one", UnionType.DISTINCT).orderBy("field_one", "ASC");
     expect(qb.getSQL()).toBe("(SELECT 1 AS field_one) UNION (SELECT 2 as field_one) ORDER BY field_one ASC");
   });
+
+  it("should build INSERT with upsert (mode=insert)", () => {
+    const qb = new QueryBuilder();
+    qb.upsert("users", { foo: "bar", bar: 42 }, "insert");
+    expect(qb.toString()).toBe("INSERT INTO users (foo, bar) VALUES(?, ?)");
+    expect(qb.getParameter(0)).toBe("bar");
+    expect(qb.getParameter(1)).toBe(42);
+    expect(qb.getParameters()).toStrictEqual(["bar", 42]);
+  });
+
+  it("should build UPDATE with upsert (mode=update)", () => {
+    const qb = new QueryBuilder();
+    qb.upsert("users", { foo: "bar", bar: 42 }, "update");
+    expect(qb.toString()).toBe("UPDATE users SET foo = ?, bar = ?");
+    expect(qb.getParameter(0)).toBe("bar");
+    expect(qb.getParameter(1)).toBe(42);
+    expect(qb.getParameters()).toStrictEqual(["bar", 42]);
+  });
+
+  it("should throw if upsert is called with empty data (insert)", () => {
+    const qb = new QueryBuilder();
+    expect(() => qb.upsert("users", {}, "insert")).toThrow(QueryException);
+  });
+
+  it("should throw if upsert is called with empty data (update)", () => {
+    const qb = new QueryBuilder();
+    expect(() => qb.upsert("users", {}, "update")).toThrow(QueryException);
+  });
 });
