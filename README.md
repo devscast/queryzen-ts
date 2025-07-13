@@ -48,7 +48,7 @@ interface UserFilters {
     isActive?: boolean;
 }
 
-function buildUserSearchQuery(filters: UserFilters) {
+const searchUserQuery = (filters: UserFilters): QueryBuilder => {
     const qb = new QueryBuilder()
         .select('u.id', 'u.username', 'u.email', 'u.created_at')
         .from('users', 'u');
@@ -70,9 +70,17 @@ function buildUserSearchQuery(filters: UserFilters) {
 
     qb.orderBy('u.created_at', 'DESC');
 
-    return qb.toString();
+    return qb
 }
 
+const query = searchUserQuery({ username: 'john', isActive: true });
+
+// query.toString() => "
+    // SELECT u.id, u.username, u.email, u.created_at 
+    // FROM `users` AS u 
+    // WHERE u.username LIKE :username AND u.is_active = :isActive 
+    // ORDER BY u.created_at DESC"
+// { ...query.getParameters() } => { username: '%john%', isActive: true }
 ```
 
 #### 2. Fetching posts with authors and optional category filtering
@@ -85,7 +93,7 @@ interface PostFilters {
   authorName?: string;
 }
 
-function buildPostListQuery(filters: PostFilters) {
+const getPostListQuery = (filters: PostFilters): QueryBuilder => {
   const qb = new QueryBuilder()
     .select(
       'p.id',
@@ -117,32 +125,67 @@ function buildPostListQuery(filters: PostFilters) {
 
   qb.orderBy('p.created_at', 'DESC');
 
-  return qb.toString();
+  return qb;
 }
+
+const query = getPostListQuery({ isPublished: true });
 ```
 
 #### 3. Using CTEs to fetch active users with their latest login
 ```typescript
 import { QueryBuilder } from '@devscast/queryzen';
 
-function buildActiveUsersWithLastLoginQuery() {
-  // Step 1: Define the CTE for latest logins per user
-  const lastLoginCTE = new QueryBuilder()
+// Step 1: Define the CTE for latest logins per user
+const lastLoginQuery = new QueryBuilder()
     .select('l.user_id', 'MAX(l.logged_in_at) AS last_login_at')
     .from('logins', 'l')
     .groupBy('l.user_id');
 
-  // Step 2: Main query using the CTE
-  const qb = new QueryBuilder()
-    .with('last_login', lastLoginCTE)
+// Step 2: Main query using the CTE
+const qb = new QueryBuilder()
+    .with('last_login', lastLoginQuery)
     .select('u.id', 'u.name', 'u.email', 'll.last_login_at')
     .from('users', 'u')
     .innerJoin('u', 'last_login', 'll', 'll.user_id = u.id')
     .where('u.is_active = true')
     .orderBy('ll.last_login_at', 'DESC');
+```
 
-  return qb.toString();
-}
+#### 4. Deleting users by status
+```typescript
+import { QueryBuilder } from '@devscast/queryzen';
+
+const qb = new QueryBuilder()
+    .delete('users').where('name = :name')
+    .setParameter('name', 'John Doe');
+
+// qb.toString() => "DELETE FROM `users` WHERE name = :name"
+// { ...qb.getParameters() } => { name: 'John Doe' }
+```
+
+#### 5. Inserting a new user
+```typescript
+import { QueryBuilder } from '@devscast/queryzen';
+
+const data = { name: 'John Doe', email: 'john.doe@test.com' }
+const qb = new QueryBuilder().upsert('users', data, 'insert', 'positional');
+
+// qb.toString() => "INSERT INTO `users` (name, email) VALUES (?, ?)"
+// qb.getParameters() => ['John Doe', 'john.doe@test.com' ]
+```
+
+#### 6. Updating a user
+```typescript
+import { QueryBuilder } from '@devscast/queryzen';
+
+const data = { name: 'Jane Doe', email: 'jane.doe@test.com' }
+const qb = new QueryBuilder()
+    .upsert('users', data, 'update', 'named')
+    .where('id = :id')
+    .setParameter('id', 123);
+
+// qb.toString() => "UPDATE `users` SET name = :name, email = :email WHERE id = :id"
+// { ...qb.getParameters() } => { name: 'Jane Doe', email: 'jane.doe@test.com' }
 ```
 
 ### Security Notice: SQL Injection

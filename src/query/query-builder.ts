@@ -17,6 +17,8 @@ import { UnionQuery } from "@/query/union-query";
 import { UnionType } from "@/query/union-type";
 
 type ParamType = string | ParameterType | ArrayParameterType;
+type UpsertMode = "insert" | "update";
+type PlaceHolderType = "named" | "positional";
 
 /**
  * QueryBuilder class is responsible to dynamically create SQL queries.
@@ -275,18 +277,28 @@ export class QueryBuilder {
    * Turns the query being built into an upsert query that inserts or updates
    * a certain table with the given data record.
    */
-  public upsert<T extends Record<string, any>>(table: string, data: T, mode: "insert" | "update" = "insert"): this {
-    mode === "insert" ? this.insert(table) : this.update(table);
-
+  public upsert<T extends Record<string, any>>(
+    table: string,
+    data: T,
+    mode: UpsertMode = "insert",
+    type: PlaceHolderType = "positional"
+  ): this {
     if (!data || Object.keys(data).length === 0) {
       throw new QueryException("Insufficient data given for upsert operation. Data cannot be empty.");
     }
 
-    const columns = Object.keys(data);
-    columns.forEach((column: string) => {
-      mode === "insert" ? this.setValue(column, "?") : this.set(column, "?");
-      this.createPositionalParameter(data[column], ParameterType.STRING);
-    });
+    const isInsert = mode === "insert";
+    isInsert ? this.insert(table) : this.update(table);
+
+    for (const column of Object.keys(data)) {
+      const value = data[column];
+      const placeHolder =
+        type === "named"
+          ? this.createNamedParameter(value, ParameterType.STRING, column)
+          : this.createPositionalParameter(value, ParameterType.STRING);
+
+      isInsert ? this.setValue(column, placeHolder) : this.set(column, placeHolder);
+    }
 
     return this;
   }
@@ -713,6 +725,8 @@ export class QueryBuilder {
     if (placeHolder === null) {
       this.boundCounter++;
       placeHolder = `:dcValue${this.boundCounter}`;
+    } else {
+      placeHolder = placeHolder.startsWith(":") ? placeHolder : `:${placeHolder}`;
     }
 
     this.setParameter(placeHolder.substring(1), value, type);

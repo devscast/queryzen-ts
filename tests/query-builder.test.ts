@@ -737,6 +737,24 @@ describe("QueryBuilder", () => {
     expect(qb.getParameters()).toStrictEqual(["bar", 42]);
   });
 
+  it("should build INSERT with upsert and named parameters", () => {
+    const qb = new QueryBuilder();
+    qb.upsert("users", { foo: "bar", bar: 42 }, "insert", "named");
+    expect(qb.toString()).toBe("INSERT INTO users (foo, bar) VALUES(:foo, :bar)");
+    expect(qb.getParameter("foo")).toBe("bar");
+    expect(qb.getParameter("bar")).toBe(42);
+    expect({ ...qb.getParameters() }).toStrictEqual({ foo: "bar", bar: 42 });
+  });
+
+  it("should build UPDATE with upsert and named parameters", () => {
+    const qb = new QueryBuilder();
+    qb.upsert("users", { foo: "bar", bar: 42 }, "update", "named");
+    expect(qb.toString()).toBe("UPDATE users SET foo = :foo, bar = :bar");
+    expect(qb.getParameter("foo")).toBe("bar");
+    expect(qb.getParameter("bar")).toBe(42);
+    expect({ ...qb.getParameters() }).toStrictEqual({ foo: "bar", bar: 42 });
+  });
+
   it("should throw if upsert is called with empty data (insert)", () => {
     const qb = new QueryBuilder();
     expect(() => qb.upsert("users", {}, "insert")).toThrow(QueryException);
