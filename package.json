@@ -1,6 +1,6 @@
 {
   "name": "@devscast/queryzen",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "source": "./src/index.ts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -24,7 +24,7 @@
     "lint:fix": "eslint ./src --fix",
     "check-types": "tsc --noEmit",
     "=========== NPM PUBLISH ==============": "",
-    "release": "npm publish --access public",
+    "release": "npm run build && npm publish --access public",
     "version": "changeset version"
   },
   "lint-staged": {
