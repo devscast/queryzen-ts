@@ -1,5 +1,11 @@
 # @devscast/queryzen
 
+## 1.0.3
+
+### Patch Changes
+
+- add upsert method
+
 ## 1.0.2
 
 ### Patch Changes
