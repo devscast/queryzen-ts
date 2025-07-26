@@ -19,6 +19,7 @@ The goal is to simplify and encourage safe query reuse—especially in contexts 
 Projects like [sql-bricks](https://www.npmjs.com/package/sql-bricks) and [mysql-bricks](https://www.npmjs.com/package/mysql-bricks) previously served this purpose well, but they are now unmaintained. This library aims to serve as a modern, actively supported alternative, while following the same core principle: build composable SQL statements as strings.
 
 > ⚠️ Note: This library does not provide schema-aware features or type safety tied to your database structure. It focuses solely on SQL string generation.
+> If you are looking for theses features please have a look at ["Cold" Kysely instances](https://kysely.dev/docs/recipes/splitting-query-building-and-execution)
 
 ## Use Case
 This tool is particularly useful for:
@@ -53,19 +54,17 @@ const searchUserQuery = (filters: UserFilters): QueryBuilder => {
         .select('u.id', 'u.username', 'u.email', 'u.created_at')
         .from('users', 'u');
 
-    if (filters.username) {
+    switch (true) {
+      case filters.minAge !== undefined:
+        qb.andWhere(`u.age >= ${qb.createNamedParameter(filters.minAge, 'minAge')}`);
+        break;
+      case filters.isActive !== undefined:
+        qb.andWhere(`u.is_active = ${qb.createNamedParameter(filters.isActive, 'isActive')}`);
+        break;
+      case !!filters.username:
         qb.andWhere('u.username LIKE :username');
         qb.setParameter('username', `%${filters.username}%`);
-    }
-
-    if (filters.minAge !== undefined) {
-        qb.andWhere('u.age >= :minAge');
-        qb.setParameter('minAge', filters.minAge);
-    }
-
-    if (filters.isActive !== undefined) {
-        qb.andWhere('u.is_active = :isActive');
-        qb.setParameter('isActive', filters.isActive);
+        break;
     }
 
     qb.orderBy('u.created_at', 'DESC');
@@ -93,7 +92,7 @@ interface PostFilters {
   authorName?: string;
 }
 
-const getPostListQuery = (filters: PostFilters): QueryBuilder => {
+const postListQuery = (filters: PostFilters): QueryBuilder => {
   const qb = new QueryBuilder()
     .select(
       'p.id',
@@ -108,19 +107,17 @@ const getPostListQuery = (filters: PostFilters): QueryBuilder => {
     .innerJoin('p', 'author', 'a', 'p.author_id = a.id')
     .leftJoin('p', 'category', 'c', 'p.category_id = c.id');
 
-  if (filters.isPublished !== undefined) {
-    qb.andWhere('p.is_published = :isPublished');
-    qb.setParameter('isPublished', filters.isPublished);
-  }
-
-  if (filters.categoryId !== undefined) {
-    qb.andWhere('p.category_id = :categoryId');
-    qb.setParameter('categoryId', filters.categoryId);
-  }
-
-  if (filters.authorName) {
-    qb.andWhere('a.name LIKE :authorName');
-    qb.setParameter('authorName', `%${filters.authorName}%`);
+  switch (true) {
+    case filters.isPublished !== undefined:
+      qb.andWhere(`p.is_published = ${qb.createNamedParameter(filters.isPublished, 'isPublished')}`);
+      break;
+    case filters.categoryId !== undefined:
+      qb.andWhere(`p.category_id = ${qb.createNamedParameter(filters.categoryId, 'categoryId')}`);
+      break;
+    case !!filters.authorName:
+      qb.andWhere(`a.name LIKE :authorName`);
+      qb.setParameter('authorName', `%${filters.authorName}%`);
+      break;
   }
 
   qb.orderBy('p.created_at', 'DESC');
@@ -128,7 +125,7 @@ const getPostListQuery = (filters: PostFilters): QueryBuilder => {
   return qb;
 }
 
-const query = getPostListQuery({ isPublished: true });
+const query = postListQuery({ isPublished: true });
 ```
 
 #### 3. Using CTEs to fetch active users with their latest login
@@ -155,12 +152,12 @@ const qb = new QueryBuilder()
 ```typescript
 import { QueryBuilder } from '@devscast/queryzen';
 
-const qb = new QueryBuilder()
-    .delete('users').where('name = :name')
-    .setParameter('name', 'John Doe');
+const qb = new QueryBuilder();
 
-// qb.toString() => "DELETE FROM `users` WHERE name = :name"
-// { ...qb.getParameters() } => { name: 'John Doe' }
+qb.delete('users').where(`name = ${qb.createPositionalParameter('John Doe')}`);
+
+// qb.toString() => "DELETE FROM `users` WHERE name = ?"
+// qb.getParameters() => [ 'John Doe' ]
 ```
 
 #### 5. Inserting a new user
@@ -168,10 +165,19 @@ const qb = new QueryBuilder()
 import { QueryBuilder } from '@devscast/queryzen';
 
 const data = { name: 'John Doe', email: 'john.doe@test.com' }
-const qb = new QueryBuilder().upsert('users', data, 'insert', 'positional');
+const qb = new QueryBuilder()
+
+// Specify columns to insert
+qb
+  .insert("users")
+  .setValue("name", qb.createPositionalParameter(data.name))
+  .setValue("email", qb.createPositionalParameter(data.email))
+
+// Equivalent to: 
+qb.insertWith('users', data)
 
 // qb.toString() => "INSERT INTO `users` (name, email) VALUES (?, ?)"
-// qb.getParameters() => ['John Doe', 'john.doe@test.com' ]
+// qb.getParameters() => [ 'John Doe', 'john.doe@test.com' ]
 ```
 
 #### 6. Updating a user
@@ -180,12 +186,19 @@ import { QueryBuilder } from '@devscast/queryzen';
 
 const data = { name: 'Jane Doe', email: 'jane.doe@test.com' }
 const qb = new QueryBuilder()
-    .upsert('users', data, 'update', 'named')
-    .where('id = :id')
-    .setParameter('id', 123);
 
-// qb.toString() => "UPDATE `users` SET name = :name, email = :email WHERE id = :id"
-// { ...qb.getParameters() } => { name: 'Jane Doe', email: 'jane.doe@test.com' }
+// Specify columns to update
+qb
+  .update("users")
+  .set("name", qb.createPositionalParameter(data.name))
+  .set("email", qb.createPositionalParameter(data.email))
+  .where(`id = ${qb.createPositionalParameter(123)}`);
+
+// Equivalent to:
+qb.updateWith("users", data).where(`id = ${qb.createPositionalParameter(123)}`)
+
+// qb.toString() => "UPDATE `users` SET name = ?, email = ? WHERE id = ?"
+// qb.getParameters() => [ 'Jane Doe', 'jane.doe@test.com', 123]
 ```
 
 ### Security Notice: SQL Injection

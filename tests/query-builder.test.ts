@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { QueryBuilder } from "@/query/query-builder";
+import { describe, expect, it } from "vitest";
+import { PlaceHolder, QueryBuilder } from "@/query/query-builder";
 import { ParameterType } from "@/parameter-type";
 import { ArrayParameterType } from "@/array-parameter-type";
 import { QueryException } from "@/query/query-exception";
@@ -676,7 +676,22 @@ describe("QueryBuilder", () => {
     const qb = new QueryBuilder();
     qb.select("a.id").from("table_a", "a").join("a", "table_b", "a", "a.fk_b = a.id");
 
-    expect(() => qb.getSQL()).toThrowError(new QueryException("Non-unique alias: a"));
+    expect(() => qb.getSQL()).toThrowError(
+      new QueryException(
+        `The given alias "a" is not unique in FROM and JOIN clause table. The currently registered aliases are: a.`
+      )
+    );
+  });
+
+  it("should throw if join uses unknown alias", () => {
+    const qb = new QueryBuilder();
+    qb.select("a.id").from("table_a", "a").join("c", "table_b", "b", "b.fk_a = a.id");
+
+    expect(() => qb.getSQL()).toThrowError(
+      new QueryException(
+        `The given alias "c" is not part of any FROM or JOIN clause table. The currently registered aliases are: a.`
+      )
+    );
   });
 
   it("should throw if only one UNION part is given", () => {
@@ -730,49 +745,49 @@ describe("QueryBuilder", () => {
     expect(qb.getSQL()).toBe("(SELECT 1 AS field_one) UNION (SELECT 2 as field_one) ORDER BY field_one ASC");
   });
 
-  it("should build INSERT with upsert (mode=insert)", () => {
+  it("should build INSERT with insertWith", () => {
     const qb = new QueryBuilder();
-    qb.upsert("users", { foo: "bar", bar: 42 }, "insert");
+    qb.insertWith("users", { foo: "bar", bar: 42 });
     expect(qb.toString()).toBe("INSERT INTO users (foo, bar) VALUES(?, ?)");
     expect(qb.getParameter(0)).toBe("bar");
     expect(qb.getParameter(1)).toBe(42);
     expect(qb.getParameters()).toStrictEqual(["bar", 42]);
   });
 
-  it("should build UPDATE with upsert (mode=update)", () => {
+  it("should build UPDATE with updateWith", () => {
     const qb = new QueryBuilder();
-    qb.upsert("users", { foo: "bar", bar: 42 }, "update");
+    qb.updateWith("users", { foo: "bar", bar: 42 });
     expect(qb.toString()).toBe("UPDATE users SET foo = ?, bar = ?");
     expect(qb.getParameter(0)).toBe("bar");
     expect(qb.getParameter(1)).toBe(42);
     expect(qb.getParameters()).toStrictEqual(["bar", 42]);
   });
 
-  it("should build INSERT with upsert and named parameters", () => {
+  it("should build INSERT with insertWith and named parameters", () => {
     const qb = new QueryBuilder();
-    qb.upsert("users", { foo: "bar", bar: 42 }, "insert", "named");
+    qb.insertWith("users", { foo: "bar", bar: 42 }, PlaceHolder.NAMED);
     expect(qb.toString()).toBe("INSERT INTO users (foo, bar) VALUES(:foo, :bar)");
     expect(qb.getParameter("foo")).toBe("bar");
     expect(qb.getParameter("bar")).toBe(42);
     expect({ ...qb.getParameters() }).toStrictEqual({ foo: "bar", bar: 42 });
   });
 
-  it("should build UPDATE with upsert and named parameters", () => {
+  it("should build UPDATE with updateWith and named parameters", () => {
     const qb = new QueryBuilder();
-    qb.upsert("users", { foo: "bar", bar: 42 }, "update", "named");
+    qb.updateWith("users", { foo: "bar", bar: 42 }, PlaceHolder.NAMED);
     expect(qb.toString()).toBe("UPDATE users SET foo = :foo, bar = :bar");
     expect(qb.getParameter("foo")).toBe("bar");
     expect(qb.getParameter("bar")).toBe(42);
     expect({ ...qb.getParameters() }).toStrictEqual({ foo: "bar", bar: 42 });
   });
 
-  it("should throw if upsert is called with empty data (insert)", () => {
+  it("should throw if insertWith is called with empty data", () => {
     const qb = new QueryBuilder();
-    expect(() => qb.upsert("users", {}, "insert")).toThrow(QueryException);
+    expect(() => qb.insertWith("users", {})).toThrow(QueryException);
   });
 
-  it("should throw if upsert is called with empty data (update)", () => {
+  it("should throw if updateWith is called with empty data", () => {
     const qb = new QueryBuilder();
-    expect(() => qb.upsert("users", {}, "update")).toThrow(QueryException);
+    expect(() => qb.updateWith("users", {})).toThrow(QueryException);
   });
 });

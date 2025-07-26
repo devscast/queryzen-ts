@@ -3,6 +3,8 @@ import { ParameterType } from "@/parameter-type";
 import { AbstractPlatform } from "@/platforms/abstract-platform";
 import { MySQLPlatform } from "@/platforms/mysql-platform";
 import { CommonTableExpression } from "@/query/common-table-expression";
+import { NonUniqueAlias } from "@/query/exception/non-unique-alias";
+import { UnknownAlias } from "@/query/exception/unknown-alias";
 import { CompositeExpression } from "@/query/expression/composite-expression";
 import { ExpressionBuilder } from "@/query/expression/expression-builder";
 import { ConflictResolutionMode, ForUpdate } from "@/query/for-update";
@@ -17,8 +19,11 @@ import { UnionQuery } from "@/query/union-query";
 import { UnionType } from "@/query/union-type";
 
 type ParamType = string | ParameterType | ArrayParameterType;
-type UpsertMode = "insert" | "update";
-type PlaceHolderType = "named" | "positional";
+
+export enum PlaceHolder {
+  NAMED = "named",
+  POSITIONAL = "positional",
+}
 
 /**
  * QueryBuilder class is responsible to dynamically create SQL queries.
@@ -64,7 +69,7 @@ export class QueryBuilder {
    * builder object in a local variable.
    */
   public expr(): ExpressionBuilder {
-    return new ExpressionBuilder();
+    return new ExpressionBuilder(this.platform);
   }
 
   /**
@@ -274,36 +279,6 @@ export class QueryBuilder {
   }
 
   /**
-   * Turns the query being built into an upsert query that inserts or updates
-   * a certain table with the given data record.
-   */
-  public upsert<T extends Record<string, any>>(
-    table: string,
-    data: T,
-    mode: UpsertMode = "insert",
-    type: PlaceHolderType = "positional"
-  ): this {
-    if (!data || Object.keys(data).length === 0) {
-      throw new QueryException("Insufficient data given for upsert operation. Data cannot be empty.");
-    }
-
-    const isInsert = mode === "insert";
-    isInsert ? this.insert(table) : this.update(table);
-
-    for (const column of Object.keys(data)) {
-      const value = data[column];
-      const placeHolder =
-        type === "named"
-          ? this.createNamedParameter(value, column, ParameterType.STRING)
-          : this.createPositionalParameter(value, ParameterType.STRING);
-
-      isInsert ? this.setValue(column, placeHolder) : this.set(column, placeHolder);
-    }
-
-    return this;
-  }
-
-  /**
    * Turns the query being built into an insert query that inserts into
    * a certain table
    */
@@ -311,6 +286,54 @@ export class QueryBuilder {
     this.type = QueryType.INSERT;
     this.table = table;
     this.sql = null;
+
+    return this;
+  }
+
+  /**
+   * Turns the query being built into an insert query that inserts into
+   * a certain table with the given data record.
+   */
+  public insertWith(table: string, data: Record<string, any>, placeHolder: PlaceHolder = PlaceHolder.POSITIONAL): this {
+    if (!data || Object.keys(data).length === 0) {
+      throw new QueryException("Insufficient data given for insert operation. Data cannot be empty.");
+    }
+
+    this.insert(table);
+
+    for (const column of Object.keys(data)) {
+      const raw = data[column];
+      const value =
+        placeHolder === PlaceHolder.NAMED
+          ? this.createNamedParameter(raw, column, ParameterType.STRING)
+          : this.createPositionalParameter(raw, ParameterType.STRING);
+
+      this.setValue(column, value);
+    }
+
+    return this;
+  }
+
+  /**
+   * Turns the query being built into an update query that updates
+   * a certain table with the given data record.
+   */
+  public updateWith(table: string, data: Record<string, any>, placeHolder: PlaceHolder = PlaceHolder.POSITIONAL): this {
+    if (!data || Object.keys(data).length === 0) {
+      throw new QueryException("Insufficient data given for update operation. Data cannot be empty.");
+    }
+
+    this.update(table);
+
+    for (const column of Object.keys(data)) {
+      const raw = data[column];
+      const value =
+        placeHolder === PlaceHolder.NAMED
+          ? this.createNamedParameter(raw, column, ParameterType.STRING)
+          : this.createPositionalParameter(raw, ParameterType.STRING);
+
+      this.set(column, value);
+    }
 
     return this;
   }
@@ -479,55 +502,6 @@ export class QueryBuilder {
   }
 
   /**
-   * Creates a CompositeExpression from one or more predicates combined by the AND logic.
-   */
-  private createPredicate(
-    predicate: string | CompositeExpression,
-    ...predicates: (string | CompositeExpression)[]
-  ): string | CompositeExpression {
-    if (predicates.length === 0) {
-      return predicate;
-    }
-
-    return new CompositeExpression("AND", predicate, ...predicates);
-  }
-
-  /**
-   * Appends the given predicates combined by the given type of logic to the current predicate.
-   */
-  private appendToPredicate(
-    currentPredicate: string | CompositeExpression | null,
-    type: "AND" | "OR",
-    ...predicates: (string | CompositeExpression)[]
-  ): string | CompositeExpression {
-    if (currentPredicate instanceof CompositeExpression && currentPredicate.getType() === type) {
-      if (predicates.length === 0) {
-        return currentPredicate;
-      }
-      const [head, ...rest] = predicates;
-      if (head === undefined) {
-        return currentPredicate;
-      }
-      return currentPredicate.with(head, ...rest.filter(p => p !== undefined));
-    }
-
-    if (currentPredicate !== null) {
-      predicates.unshift(currentPredicate);
-    } else if (predicates.length === 1) {
-      if (predicates[0] === undefined) {
-        throw new Error("Predicate cannot be undefined");
-      }
-      return predicates[0];
-    }
-
-    const [first, ...others] = predicates;
-    if (first === undefined) {
-      throw new Error("Predicate cannot be undefined");
-    }
-    return new CompositeExpression(type, first, ...others.filter(p => p !== undefined));
-  }
-
-  /**
    * Specifies an ordering for the query results.
    * Replaces any previously specified orderings, if any.
    */
@@ -586,6 +560,108 @@ export class QueryBuilder {
     this._orderBy = [];
     this.sql = null;
     return this;
+  }
+
+  /**
+   * Gets a string representation of this QueryBuilder which corresponds to
+   * the final SQL query being constructed.
+   */
+  public toString(): string {
+    return this.getSQL();
+  }
+
+  /**
+   * Creates a new named parameter and bind the value $value to it.
+   *
+   * This method provides a shortcut for {@see Statement::bindValue()}
+   * when using prepared statements.
+   *
+   * The parameter $value specifies the value that you want to bind. If
+   * $placeholder is not provided createNamedParameter() will automatically
+   * create a placeholder for you. An automatic placeholder will be of the
+   * name ':dcValue1', ':dcValue2' etc.
+   *
+   * @link http://www.zetacomponents.org
+   */
+  public createNamedParameter(
+    value: any,
+    placeHolder: string | null = null,
+    type: ParamType = ParameterType.STRING
+  ): string {
+    if (placeHolder === null) {
+      this.boundCounter++;
+      placeHolder = `:dcValue${this.boundCounter}`;
+    } else {
+      placeHolder = placeHolder.startsWith(":") ? placeHolder : `:${placeHolder}`;
+    }
+
+    this.setParameter(placeHolder.substring(1), value, type);
+
+    return placeHolder;
+  }
+
+  /**
+   * Creates a new positional parameter and bind the given value to it.
+   *
+   * Attention: If you are using positional parameters with the query builder you have
+   * to be very careful to bind all parameters in the order they appear in the SQL
+   * statement , otherwise they get bound in the wrong order which can lead to serious
+   * bugs in your code.
+   */
+  public createPositionalParameter(value: any, type: ParamType = ParameterType.STRING): string {
+    this.setParameter(this.boundCounter, value, type);
+    this.boundCounter++;
+
+    return "?";
+  }
+
+  /**
+   * Creates a CompositeExpression from one or more predicates combined by the AND logic.
+   */
+  private createPredicate(
+    predicate: string | CompositeExpression,
+    ...predicates: (string | CompositeExpression)[]
+  ): string | CompositeExpression {
+    if (predicates.length === 0) {
+      return predicate;
+    }
+
+    return new CompositeExpression("AND", predicate, ...predicates);
+  }
+
+  /**
+   * Appends the given predicates combined by the given type of logic to the current predicate.
+   */
+  private appendToPredicate(
+    currentPredicate: string | CompositeExpression | null,
+    type: "AND" | "OR",
+    ...predicates: (string | CompositeExpression)[]
+  ): string | CompositeExpression {
+    if (currentPredicate instanceof CompositeExpression && currentPredicate.getType() === type) {
+      if (predicates.length === 0) {
+        return currentPredicate;
+      }
+      const [head, ...rest] = predicates;
+      if (head === undefined) {
+        return currentPredicate;
+      }
+      return currentPredicate.with(head, ...rest.filter(p => p !== undefined));
+    }
+
+    if (currentPredicate !== null) {
+      predicates.unshift(currentPredicate);
+    } else if (predicates.length === 1) {
+      if (predicates[0] === undefined) {
+        throw new Error("Predicate cannot be undefined");
+      }
+      return predicates[0];
+    }
+
+    const [first, ...others] = predicates;
+    if (first === undefined) {
+      throw new Error("Predicate cannot be undefined");
+    }
+    return new CompositeExpression(type, first, ...others.filter(p => p !== undefined));
   }
 
   private getSQLForSelect(): string {
@@ -653,7 +729,7 @@ export class QueryBuilder {
   private verifyAllAliasesAreKnown(knownAliases: Set<string>): void {
     for (const fromAlias in this._join) {
       if (!knownAliases.has(fromAlias)) {
-        throw new QueryException(`Unknown alias: ${fromAlias}. Known aliases: ${Array.from(knownAliases).join(", ")}`);
+        throw UnknownAlias.new(fromAlias, Array.from(knownAliases.keys()));
       }
     }
   }
@@ -696,59 +772,6 @@ export class QueryBuilder {
       .buildSQL(new UnionQuery(this.unionParts, this._orderBy, new Limit(this.maxResults, this.firstResult)));
   }
 
-  /**
-   * Gets a string representation of this QueryBuilder which corresponds to
-   * the final SQL query being constructed.
-   */
-  public toString(): string {
-    return this.getSQL();
-  }
-
-  /**
-   * Creates a new named parameter and bind the value $value to it.
-   *
-   * This method provides a shortcut for {@see Statement::bindValue()}
-   * when using prepared statements.
-   *
-   * The parameter $value specifies the value that you want to bind. If
-   * $placeholder is not provided createNamedParameter() will automatically
-   * create a placeholder for you. An automatic placeholder will be of the
-   * name ':dcValue1', ':dcValue2' etc.
-   *
-   * @link http://www.zetacomponents.org
-   */
-  public createNamedParameter(
-    value: any,
-    placeHolder: string | null = null,
-    type: ParamType = ParameterType.STRING
-  ): string {
-    if (placeHolder === null) {
-      this.boundCounter++;
-      placeHolder = `:dcValue${this.boundCounter}`;
-    } else {
-      placeHolder = placeHolder.startsWith(":") ? placeHolder : `:${placeHolder}`;
-    }
-
-    this.setParameter(placeHolder.substring(1), value, type);
-
-    return placeHolder;
-  }
-
-  /**
-   * Creates a new positional parameter and bind the given value to it.
-   *
-   * Attention: If you are using positional parameters with the query builder you have
-   * to be very careful to bind all parameters in the order they appear in the SQL
-   * statement , otherwise they get bound in the wrong order which can lead to serious
-   * bugs in your code.
-   */
-  public createPositionalParameter(value: any, type: ParamType = ParameterType.STRING): string {
-    this.setParameter(this.boundCounter, value, type);
-    this.boundCounter++;
-
-    return "?";
-  }
-
   private getSQLForJoins(fromAlias: string, knownAliases: Set<string>): string {
     let sql = "";
 
@@ -758,7 +781,7 @@ export class QueryBuilder {
 
     for (const join of this._join[fromAlias]) {
       if (knownAliases.has(join.alias)) {
-        throw new QueryException(`Non-unique alias: ${join.alias}`);
+        throw NonUniqueAlias.new(join.alias, Array.from(knownAliases.keys()));
       }
 
       sql += ` ${join.type} JOIN ${join.table} ${join.alias}`;
