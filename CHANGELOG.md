@@ -1,5 +1,11 @@
 # @devscast/queryzen
 
+## 1.1.0
+
+### Minor Changes
+
+- change parameters order in query.createNamedParameter
+
 ## 1.0.5
 
 ### Patch Changes

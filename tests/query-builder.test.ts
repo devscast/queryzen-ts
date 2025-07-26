@@ -387,18 +387,29 @@ describe("QueryBuilder", () => {
     const qb = new QueryBuilder();
     qb.select("u.*")
       .from("users", "u")
-      .where(qb.expr().eq("u.name", qb.createNamedParameter(10, ParameterType.INTEGER)));
+      .where(qb.expr().eq("u.name", qb.createNamedParameter(10, "name", ParameterType.INTEGER)));
+
+    expect(qb.toString()).toBe("SELECT u.* FROM users u WHERE u.name = :name");
+    expect(qb.getParameter("name")).toBe(10);
+    expect(qb.getParameterType("name")).toBe(ParameterType.INTEGER);
+  });
+
+  it("should create named parameter with default placeholder", () => {
+    const qb = new QueryBuilder();
+    qb.select("u.*")
+      .from("users", "u")
+      .where(qb.expr().eq("u.name", qb.createNamedParameter(10)));
 
     expect(qb.toString()).toBe("SELECT u.* FROM users u WHERE u.name = :dcValue1");
     expect(qb.getParameter("dcValue1")).toBe(10);
-    expect(qb.getParameterType("dcValue1")).toBe(ParameterType.INTEGER);
+    expect(qb.getParameterType("dcValue1")).toBe(ParameterType.STRING);
   });
 
   it("should create named parameter with custom placeholder", () => {
     const qb = new QueryBuilder();
     qb.select("u.*")
       .from("users", "u")
-      .where(qb.expr().eq("u.name", qb.createNamedParameter(10, ParameterType.INTEGER, ":test")));
+      .where(qb.expr().eq("u.name", qb.createNamedParameter(10, ":test", ParameterType.INTEGER)));
 
     expect(qb.toString()).toBe("SELECT u.* FROM users u WHERE u.name = :test");
     expect(qb.getParameter("test")).toBe(10);

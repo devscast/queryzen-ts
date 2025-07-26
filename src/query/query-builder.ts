@@ -294,7 +294,7 @@ export class QueryBuilder {
       const value = data[column];
       const placeHolder =
         type === "named"
-          ? this.createNamedParameter(value, ParameterType.STRING, column)
+          ? this.createNamedParameter(value, column, ParameterType.STRING)
           : this.createPositionalParameter(value, ParameterType.STRING);
 
       isInsert ? this.setValue(column, placeHolder) : this.set(column, placeHolder);
@@ -719,8 +719,8 @@ export class QueryBuilder {
    */
   public createNamedParameter(
     value: any,
-    type: ParamType = ParameterType.STRING,
-    placeHolder: string | null = null
+    placeHolder: string | null = null,
+    type: ParamType = ParameterType.STRING
   ): string {
     if (placeHolder === null) {
       this.boundCounter++;
