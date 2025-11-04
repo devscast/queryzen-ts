@@ -1,5 +1,11 @@
 # @devscast/queryzen
 
+## 1.1.3
+
+### Patch Changes
+
+- fix audit issues
+
 ## 1.1.2
 
 ### Patch Changes
