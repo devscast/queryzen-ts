@@ -1,5 +1,11 @@
 # @devscast/queryzen
 
+## 1.1.2
+
+### Patch Changes
+
+- bump deps
+
 ## 1.1.1
 
 ### Patch Changes

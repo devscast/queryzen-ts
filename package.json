@@ -1,6 +1,6 @@
 {
   "name": "@devscast/queryzen",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "source": "./src/index.ts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -69,8 +69,8 @@
     "@types/node": "^24.0.13",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
-    "commitizen": "^4.3.1",
-    "cz-conventional-changelog": "^3.3.0",
+    "commitizen": "^3.0.0",
+    "cz-conventional-changelog": "^3.0.1",
     "eslint": "^9.31.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-import-resolver-typescript": "^4.4.4",
