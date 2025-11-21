@@ -1,4 +1,4 @@
-import { AbstractPlatform } from "@/platforms/abstract-platform";
+import { AbstractPlatform } from "./abstract-platform";
 
 export abstract class SQLServerPlatform extends AbstractPlatform {
   protected doModifyLimitQuery(query: string, limit: number | null, offset: number): string {
@@ -73,6 +73,6 @@ export abstract class SQLServerPlatform extends AbstractPlatform {
   }
 
   public quoteSingleIdentifier(str: string): string {
-    return "[" + str.replace(/]/g, "]]") + "]";
+    return `[${str.replace(/]/g, "]]")}]`;
   }
 }

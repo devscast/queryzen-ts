@@ -1,8 +1,8 @@
-import { DefaultSelectSQLBuilder } from "@/sql/builder/default-select-sql-builder";
-import { DefaultUnionSQLBuilder } from "@/sql/builder/default-union-sql-builder";
-import { SelectSQLBuilder } from "@/sql/builder/select-sql-builder";
-import { UnionSQLBuilder } from "@/sql/builder/union-sql-builder";
-import { WithSQLBuilder } from "@/sql/builder/with-sql-builder";
+import { DefaultSelectSQLBuilder } from "../sql/builder/default-select-sql-builder";
+import { DefaultUnionSQLBuilder } from "../sql/builder/default-union-sql-builder";
+import { SelectSQLBuilder } from "../sql/builder/select-sql-builder";
+import { UnionSQLBuilder } from "../sql/builder/union-sql-builder";
+import { WithSQLBuilder } from "../sql/builder/with-sql-builder";
 
 export abstract class AbstractPlatform {
   /**

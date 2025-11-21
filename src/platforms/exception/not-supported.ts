@@ -1,4 +1,4 @@
-import { PlatformException } from "@/platforms/exception/platform-exception";
+import { PlatformException } from "../exception/platform-exception";
 
 export class NotSupported extends Error implements PlatformException {
   constructor(method: string) {

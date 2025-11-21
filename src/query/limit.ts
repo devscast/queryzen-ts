@@ -1,7 +1,7 @@
 export class Limit {
   constructor(
     public readonly maxResults: number | null,
-    public readonly firstResult: number = 0
+    public readonly firstResult: number = 0,
   ) {}
 
   isDefined(): boolean {

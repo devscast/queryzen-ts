@@ -1,4 +1,4 @@
-import { Exception } from "@/exception";
+import { Exception } from "../exception";
 
 export class QueryException extends Error implements Exception {
   constructor(message: string) {

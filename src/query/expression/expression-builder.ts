@@ -1,6 +1,6 @@
-import { AbstractPlatform } from "@/platforms/abstract-platform";
-import { MySQLPlatform } from "@/platforms/mysql-platform";
-import { CompositeExpression } from "@/query/expression/composite-expression";
+import { AbstractPlatform } from "../../platforms/abstract-platform";
+import { MySQLPlatform } from "../../platforms/mysql-platform";
+import { CompositeExpression } from "../expression/composite-expression";
 
 export class ExpressionBuilder {
   static readonly EQ = "=";
@@ -15,14 +15,20 @@ export class ExpressionBuilder {
   /**
    * Creates a conjunction of the given expressions.
    */
-  and(expr: string | CompositeExpression, ...rest: (string | CompositeExpression)[]): CompositeExpression {
+  and(
+    expr: string | CompositeExpression,
+    ...rest: (string | CompositeExpression)[]
+  ): CompositeExpression {
     return CompositeExpression.and(expr, ...rest);
   }
 
   /**
    * Creates a disjunction of the given expressions.
    */
-  or(expr: string | CompositeExpression, ...rest: (string | CompositeExpression)[]): CompositeExpression {
+  or(
+    expr: string | CompositeExpression,
+    ...rest: (string | CompositeExpression)[]
+  ): CompositeExpression {
     return CompositeExpression.or(expr, ...rest);
   }
 

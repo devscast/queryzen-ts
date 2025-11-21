@@ -1,5 +1,5 @@
-import { QueryBuilder } from "@/query/query-builder";
-import { QueryException } from "@/query/query-exception";
+import { QueryBuilder } from "./query-builder";
+import { QueryException } from "./query-exception";
 
 export class CommonTableExpression {
   public readonly name: string;

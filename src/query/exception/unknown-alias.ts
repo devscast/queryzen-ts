@@ -1,4 +1,4 @@
-import { QueryException } from "@/query/query-exception";
+import { QueryException } from "../query-exception";
 
 export class UnknownAlias extends QueryException {
   static new(alias: string, registeredAliases: string[]): UnknownAlias {

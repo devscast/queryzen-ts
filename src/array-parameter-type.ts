@@ -1,4 +1,4 @@
-import { ParameterType } from "@/parameter-type";
+import { ParameterType } from "./parameter-type";
 
 export enum ArrayParameterType {
   INTEGER = "INTEGER",

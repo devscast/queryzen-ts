@@ -1,7 +1,10 @@
-import { CommonTableExpression } from "@/query/common-table-expression";
+import { CommonTableExpression } from "../../query/common-table-expression";
 
 export class WithSQLBuilder {
-  public buildSQL(firstExpression: CommonTableExpression, ...otherExpressions: CommonTableExpression[]): string {
+  public buildSQL(
+    firstExpression: CommonTableExpression,
+    ...otherExpressions: CommonTableExpression[]
+  ): string {
     const cteParts: string[] = [];
 
     for (const part of [firstExpression, ...otherExpressions]) {

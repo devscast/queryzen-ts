@@ -12,16 +12,27 @@ export class CompositeExpression {
     this.parts = [part, ...rest];
   }
 
-  static and(part: CompositeExpression | string, ...parts: (CompositeExpression | string)[]): CompositeExpression {
+  static and(
+    part: CompositeExpression | string,
+    ...parts: (CompositeExpression | string)[]
+  ): CompositeExpression {
     return new CompositeExpression("AND", part, ...parts);
   }
 
-  static or(part: CompositeExpression | string, ...parts: (CompositeExpression | string)[]): CompositeExpression {
+  static or(
+    part: CompositeExpression | string,
+    ...parts: (CompositeExpression | string)[]
+  ): CompositeExpression {
     return new CompositeExpression("OR", part, ...parts);
   }
 
-  with(part: CompositeExpression | string, ...parts: (CompositeExpression | string)[]): CompositeExpression {
-    const newParts = [...this.parts, part, ...parts].filter((p): p is CompositeExpression | string => p !== undefined);
+  with(
+    part: CompositeExpression | string,
+    ...parts: (CompositeExpression | string)[]
+  ): CompositeExpression {
+    const newParts = [...this.parts, part, ...parts].filter(
+      (p): p is CompositeExpression | string => p !== undefined,
+    );
     if (newParts.length === 0) {
       throw new Error("CompositeExpression.with() requires at least one part");
     }

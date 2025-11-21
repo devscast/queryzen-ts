@@ -1,22 +1,22 @@
-import { ArrayParameterType } from "@/array-parameter-type";
-import { ParameterType } from "@/parameter-type";
-import { AbstractPlatform } from "@/platforms/abstract-platform";
-import { MySQLPlatform } from "@/platforms/mysql-platform";
-import { CommonTableExpression } from "@/query/common-table-expression";
-import { NonUniqueAlias } from "@/query/exception/non-unique-alias";
-import { UnknownAlias } from "@/query/exception/unknown-alias";
-import { CompositeExpression } from "@/query/expression/composite-expression";
-import { ExpressionBuilder } from "@/query/expression/expression-builder";
-import { ConflictResolutionMode, ForUpdate } from "@/query/for-update";
-import { From } from "@/query/from";
-import { Join } from "@/query/join";
-import { Limit } from "@/query/limit";
-import { QueryException } from "@/query/query-exception";
-import { QueryType } from "@/query/query-type";
-import { SelectQuery } from "@/query/select-query";
-import { Union } from "@/query/union";
-import { UnionQuery } from "@/query/union-query";
-import { UnionType } from "@/query/union-type";
+import { ArrayParameterType } from "../array-parameter-type";
+import { ParameterType } from "../parameter-type";
+import { AbstractPlatform } from "../platforms/abstract-platform";
+import { MySQLPlatform } from "../platforms/mysql-platform";
+import { CommonTableExpression } from "../query/common-table-expression";
+import { NonUniqueAlias } from "./exception/non-unique-alias";
+import { UnknownAlias } from "./exception/unknown-alias";
+import { CompositeExpression } from "./expression/composite-expression";
+import { ExpressionBuilder } from "./expression/expression-builder";
+import { ConflictResolutionMode, ForUpdate } from "./for-update";
+import { From } from "./from";
+import { Join } from "./join";
+import { Limit } from "./limit";
+import { QueryException } from "./query-exception";
+import { QueryType } from "./query-type";
+import { SelectQuery } from "./select-query";
+import { Union } from "./union";
+import { UnionQuery } from "./union-query";
+import { UnionType } from "./union-type";
 
 type ParamType = string | ParameterType | ArrayParameterType;
 
@@ -80,22 +80,31 @@ export class QueryBuilder {
 
     switch (this.type) {
       case QueryType.INSERT:
-        return (this.sql = this.getSQLForInsert());
+        this.sql = this.getSQLForInsert();
+        return this.sql;
       case QueryType.DELETE:
-        return (this.sql = this.getSQLForDelete());
+        this.sql = this.getSQLForDelete();
+        return this.sql;
       case QueryType.UPDATE:
-        return (this.sql = this.getSQLForUpdate());
+        this.sql = this.getSQLForUpdate();
+        return this.sql;
       case QueryType.SELECT:
-        return (this.sql = this.getSQLForSelect());
+        this.sql = this.getSQLForSelect();
+        return this.sql;
       case QueryType.UNION:
-        return (this.sql = this.getSQLForUnion());
+        this.sql = this.getSQLForUnion();
+        return this.sql;
     }
   }
 
   /**
    * Sets a query parameter for the query being constructed.
    */
-  public setParameter(key: string | number, value: any, type: ParamType = ParameterType.STRING): this {
+  public setParameter(
+    key: string | number,
+    value: any,
+    type: ParamType = ParameterType.STRING,
+  ): this {
     this.params[key] = value;
     this.types[key] = type;
 
@@ -105,7 +114,10 @@ export class QueryBuilder {
   /**
    * Sets a query parameter for the query being constructed.
    */
-  public setParameters(params: Record<string | number, any>, types: Record<string | number, ParamType> = {}): this {
+  public setParameters(
+    params: Record<string | number, any>,
+    types: Record<string | number, ParamType> = {},
+  ): this {
     this.params = params;
     this.types = types;
 
@@ -294,9 +306,15 @@ export class QueryBuilder {
    * Turns the query being built into an insert query that inserts into
    * a certain table with the given data record.
    */
-  public insertWith(table: string, data: Record<string, any>, placeHolder: PlaceHolder = PlaceHolder.POSITIONAL): this {
+  public insertWith(
+    table: string,
+    data: Record<string, any>,
+    placeHolder: PlaceHolder = PlaceHolder.POSITIONAL,
+  ): this {
     if (!data || Object.keys(data).length === 0) {
-      throw new QueryException("Insufficient data given for insert operation. Data cannot be empty.");
+      throw new QueryException(
+        "Insufficient data given for insert operation. Data cannot be empty.",
+      );
     }
 
     this.insert(table);
@@ -318,9 +336,15 @@ export class QueryBuilder {
    * Turns the query being built into an update query that updates
    * a certain table with the given data record.
    */
-  public updateWith(table: string, data: Record<string, any>, placeHolder: PlaceHolder = PlaceHolder.POSITIONAL): this {
+  public updateWith(
+    table: string,
+    data: Record<string, any>,
+    placeHolder: PlaceHolder = PlaceHolder.POSITIONAL,
+  ): this {
     if (!data || Object.keys(data).length === 0) {
-      throw new QueryException("Insufficient data given for update operation. Data cannot be empty.");
+      throw new QueryException(
+        "Insufficient data given for update operation. Data cannot be empty.",
+      );
     }
 
     this.update(table);
@@ -352,14 +376,24 @@ export class QueryBuilder {
   /**
    * Creates and adds a join to the query.
    */
-  public join(fromAlias: string, join: string, alias: string, condition: string | null = null): this {
+  public join(
+    fromAlias: string,
+    join: string,
+    alias: string,
+    condition: string | null = null,
+  ): this {
     return this.innerJoin(fromAlias, join, alias, condition);
   }
 
   /**
    * Creates and adds a join to the query.
    */
-  public innerJoin(fromAlias: string, join: string, alias: string, condition: string | null = null): this {
+  public innerJoin(
+    fromAlias: string,
+    join: string,
+    alias: string,
+    condition: string | null = null,
+  ): this {
     this._join[fromAlias] = this._join[fromAlias] ?? [];
     this._join[fromAlias].push(Join.inner(join, alias, condition));
     this.sql = null;
@@ -370,7 +404,12 @@ export class QueryBuilder {
   /**
    * Creates and adds a left join to the query.
    */
-  public leftJoin(fromAlias: string, join: string, alias: string, condition: string | null = null): this {
+  public leftJoin(
+    fromAlias: string,
+    join: string,
+    alias: string,
+    condition: string | null = null,
+  ): this {
     this._join[fromAlias] = this._join[fromAlias] ?? [];
     this._join[fromAlias].push(Join.left(join, alias, condition));
     this.sql = null;
@@ -381,7 +420,12 @@ export class QueryBuilder {
   /**
    * Creates and adds a right join to the query.
    */
-  public rightJoin(fromAlias: string, join: string, alias: string, condition: string | null = null): this {
+  public rightJoin(
+    fromAlias: string,
+    join: string,
+    alias: string,
+    condition: string | null = null,
+  ): this {
     this._join[fromAlias] = this._join[fromAlias] ?? [];
     this._join[fromAlias].push(Join.right(join, alias, condition));
     this.sql = null;
@@ -403,7 +447,10 @@ export class QueryBuilder {
    * Specifies one or more restrictions to the query result.
    * Replaces any previously specified restrictions, if any.
    */
-  public where(predicate: string | CompositeExpression, ...predicates: (string | CompositeExpression)[]): this {
+  public where(
+    predicate: string | CompositeExpression,
+    ...predicates: (string | CompositeExpression)[]
+  ): this {
     this._where = this.createPredicate(predicate, ...predicates);
     this.sql = null;
 
@@ -414,8 +461,16 @@ export class QueryBuilder {
    * Adds one or more restrictions to the query results, forming a logical
    * conjunction with any previously specified restrictions.
    */
-  public andWhere(predicate: string | CompositeExpression, ...predicates: (string | CompositeExpression)[]): this {
-    this._where = this.appendToPredicate(this._where, CompositeExpression.TYPE_AND, predicate, ...predicates);
+  public andWhere(
+    predicate: string | CompositeExpression,
+    ...predicates: (string | CompositeExpression)[]
+  ): this {
+    this._where = this.appendToPredicate(
+      this._where,
+      CompositeExpression.TYPE_AND,
+      predicate,
+      ...predicates,
+    );
     this.sql = null;
 
     return this;
@@ -425,8 +480,16 @@ export class QueryBuilder {
    * Adds one or more restrictions to the query results, forming a logical
    * disjunction with any previously specified restrictions.
    */
-  public orWhere(predicate: string | CompositeExpression, ...predicates: (string | CompositeExpression)[]): this {
-    this._where = this.appendToPredicate(this._where, CompositeExpression.TYPE_OR, predicate, ...predicates);
+  public orWhere(
+    predicate: string | CompositeExpression,
+    ...predicates: (string | CompositeExpression)[]
+  ): this {
+    this._where = this.appendToPredicate(
+      this._where,
+      CompositeExpression.TYPE_OR,
+      predicate,
+      ...predicates,
+    );
     this.sql = null;
 
     return this;
@@ -475,7 +538,10 @@ export class QueryBuilder {
    * Specifies a restriction over the groups of the query.
    * Replaces any previous having restrictions, if any.
    */
-  public having(predicate: string | CompositeExpression, ...predicates: (string | CompositeExpression)[]): this {
+  public having(
+    predicate: string | CompositeExpression,
+    ...predicates: (string | CompositeExpression)[]
+  ): this {
     this._having = this.createPredicate(predicate, ...predicates);
     this.sql = null;
     return this;
@@ -485,8 +551,16 @@ export class QueryBuilder {
    * Adds a restriction over the groups of the query, forming a logical
    * conjunction with any existing having restrictions.
    */
-  public andHaving(predicate: string | CompositeExpression, ...predicates: (string | CompositeExpression)[]): this {
-    this._having = this.appendToPredicate(this._having, CompositeExpression.TYPE_AND, predicate, ...predicates);
+  public andHaving(
+    predicate: string | CompositeExpression,
+    ...predicates: (string | CompositeExpression)[]
+  ): this {
+    this._having = this.appendToPredicate(
+      this._having,
+      CompositeExpression.TYPE_AND,
+      predicate,
+      ...predicates,
+    );
     this.sql = null;
     return this;
   }
@@ -495,8 +569,16 @@ export class QueryBuilder {
    * Adds a restriction over the groups of the query, forming a logical
    * disjunction with any existing having restrictions.
    */
-  public orHaving(predicate: string | CompositeExpression, ...predicates: (string | CompositeExpression)[]): this {
-    this._having = this.appendToPredicate(this._having, CompositeExpression.TYPE_OR, predicate, ...predicates);
+  public orHaving(
+    predicate: string | CompositeExpression,
+    ...predicates: (string | CompositeExpression)[]
+  ): this {
+    this._having = this.appendToPredicate(
+      this._having,
+      CompositeExpression.TYPE_OR,
+      predicate,
+      ...predicates,
+    );
     this.sql = null;
     return this;
   }
@@ -586,7 +668,7 @@ export class QueryBuilder {
   public createNamedParameter(
     value: any,
     placeHolder: string | null = null,
-    type: ParamType = ParameterType.STRING
+    type: ParamType = ParameterType.STRING,
   ): string {
     if (placeHolder === null) {
       this.boundCounter++;
@@ -645,7 +727,7 @@ export class QueryBuilder {
       if (head === undefined) {
         return currentPredicate;
       }
-      return currentPredicate.with(head, ...rest.filter(p => p !== undefined));
+      return currentPredicate.with(head, ...rest.filter((p) => p !== undefined));
     }
 
     if (currentPredicate !== null) {
@@ -661,7 +743,7 @@ export class QueryBuilder {
     if (first === undefined) {
       throw new Error("Predicate cannot be undefined");
     }
-    return new CompositeExpression(type, first, ...others.filter(p => p !== undefined));
+    return new CompositeExpression(type, first, ...others.filter((p) => p !== undefined));
   }
 
   private getSQLForSelect(): string {
@@ -675,7 +757,11 @@ export class QueryBuilder {
       if (!expression) {
         throw new Error("CommonTableExpression cannot be undefined");
       }
-      selectParts.push(this.platform.createWithSQLBuilder().buildSQL(expression, ...rest.filter(e => e !== undefined)));
+      selectParts.push(
+        this.platform
+          .createWithSQLBuilder()
+          .buildSQL(expression, ...rest.filter((e) => e !== undefined)),
+      );
     }
 
     if (this.platform) {
@@ -692,9 +778,9 @@ export class QueryBuilder {
               this._having !== null ? this._having.toString() : null,
               this._orderBy,
               new Limit(this.maxResults, this.firstResult),
-              this._forUpdate
-            )
-          )
+              this._forUpdate,
+            ),
+          ),
       );
     }
 
@@ -763,13 +849,19 @@ export class QueryBuilder {
     if (countUnions < 2) {
       throw new QueryException(
         "Insufficient UNION parts given, need at least 2. " +
-          "Please use union() and addUnion() to set enough UNION parts."
+          "Please use union() and addUnion() to set enough UNION parts.",
       );
     }
 
     return this.platform
       .createUnionSQLBuilder()
-      .buildSQL(new UnionQuery(this.unionParts, this._orderBy, new Limit(this.maxResults, this.firstResult)));
+      .buildSQL(
+        new UnionQuery(
+          this.unionParts,
+          this._orderBy,
+          new Limit(this.maxResults, this.firstResult),
+        ),
+      );
   }
 
   private getSQLForJoins(fromAlias: string, knownAliases: Set<string>): string {

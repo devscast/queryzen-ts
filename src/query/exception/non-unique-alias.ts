@@ -1,4 +1,4 @@
-import { QueryException } from "@/query/query-exception";
+import { QueryException } from "../query-exception";
 
 export class NonUniqueAlias extends QueryException {
   static new(alias: string, registeredAliases: string[]): NonUniqueAlias {

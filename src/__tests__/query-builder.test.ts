@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { PlaceHolder, QueryBuilder } from "@/query/query-builder";
-import { ParameterType } from "@/parameter-type";
-import { ArrayParameterType } from "@/array-parameter-type";
-import { QueryException } from "@/query/query-exception";
-import { UnionType } from "@/query/union-type";
+
+import { ArrayParameterType } from "../array-parameter-type";
+import { ParameterType } from "../parameter-type";
+import { PlaceHolder, QueryBuilder } from "../query/query-builder";
+import { QueryException } from "../query/query-exception";
+import { UnionType } from "../query/union-type";
 
 describe("QueryBuilder", () => {
   it("should instantiate without errors", () => {
@@ -44,18 +45,26 @@ describe("QueryBuilder", () => {
     const qb = new QueryBuilder();
     const expr = qb.expr();
 
-    qb.select("u.*", "p.*").from("users", "u").leftJoin("u", "phones", "p", expr.eq("p.user_id", "u.id"));
+    qb.select("u.*", "p.*")
+      .from("users", "u")
+      .leftJoin("u", "phones", "p", expr.eq("p.user_id", "u.id"));
 
-    expect(qb.toString()).toBe("SELECT u.*, p.* FROM users u LEFT JOIN phones p ON p.user_id = u.id");
+    expect(qb.toString()).toBe(
+      "SELECT u.*, p.* FROM users u LEFT JOIN phones p ON p.user_id = u.id",
+    );
   });
 
   it("should build SELECT with INNER JOIN", () => {
     const qb = new QueryBuilder();
     const expr = qb.expr();
 
-    qb.select("u.*", "p.*").from("users", "u").join("u", "phones", "p", expr.eq("p.user_id", "u.id"));
+    qb.select("u.*", "p.*")
+      .from("users", "u")
+      .join("u", "phones", "p", expr.eq("p.user_id", "u.id"));
 
-    expect(qb.toString()).toBe("SELECT u.*, p.* FROM users u INNER JOIN phones p ON p.user_id = u.id");
+    expect(qb.toString()).toBe(
+      "SELECT u.*, p.* FROM users u INNER JOIN phones p ON p.user_id = u.id",
+    );
   });
 
   it("should build SELECT with INNER JOIN and no ON condition", () => {
@@ -70,18 +79,26 @@ describe("QueryBuilder", () => {
     const qb = new QueryBuilder();
     const expr = qb.expr();
 
-    qb.select("u.*", "p.*").from("users", "u").innerJoin("u", "phones", "p", expr.eq("p.user_id", "u.id"));
+    qb.select("u.*", "p.*")
+      .from("users", "u")
+      .innerJoin("u", "phones", "p", expr.eq("p.user_id", "u.id"));
 
-    expect(qb.toString()).toBe("SELECT u.*, p.* FROM users u INNER JOIN phones p ON p.user_id = u.id");
+    expect(qb.toString()).toBe(
+      "SELECT u.*, p.* FROM users u INNER JOIN phones p ON p.user_id = u.id",
+    );
   });
 
   it("should build SELECT with RIGHT JOIN", () => {
     const qb = new QueryBuilder();
     const expr = qb.expr();
 
-    qb.select("u.*", "p.*").from("users", "u").rightJoin("u", "phones", "p", expr.eq("p.user_id", "u.id"));
+    qb.select("u.*", "p.*")
+      .from("users", "u")
+      .rightJoin("u", "phones", "p", expr.eq("p.user_id", "u.id"));
 
-    expect(qb.toString()).toBe("SELECT u.*, p.* FROM users u RIGHT JOIN phones p ON p.user_id = u.id");
+    expect(qb.toString()).toBe(
+      "SELECT u.*, p.* FROM users u RIGHT JOIN phones p ON p.user_id = u.id",
+    );
   });
 
   it("should build SELECT with ANDed WHERE conditions", () => {
@@ -89,7 +106,9 @@ describe("QueryBuilder", () => {
 
     qb.select("u.*", "p.*").from("users", "u").where("u.username = ?").andWhere("u.name = ?");
 
-    expect(qb.toString()).toBe("SELECT u.*, p.* FROM users u WHERE (u.username = ?) AND (u.name = ?)");
+    expect(qb.toString()).toBe(
+      "SELECT u.*, p.* FROM users u WHERE (u.username = ?) AND (u.name = ?)",
+    );
   });
 
   it("should build SELECT with ORed WHERE conditions", () => {
@@ -97,7 +116,9 @@ describe("QueryBuilder", () => {
 
     qb.select("u.*", "p.*").from("users", "u").where("u.username = ?").orWhere("u.name = ?");
 
-    expect(qb.toString()).toBe("SELECT u.*, p.* FROM users u WHERE (u.username = ?) OR (u.name = ?)");
+    expect(qb.toString()).toBe(
+      "SELECT u.*, p.* FROM users u WHERE (u.username = ?) OR (u.name = ?)",
+    );
   });
 
   it("should build SELECT with two ORed WHERE conditions (orWhere only)", () => {
@@ -105,7 +126,9 @@ describe("QueryBuilder", () => {
 
     qb.select("u.*", "p.*").from("users", "u").orWhere("u.username = ?").orWhere("u.name = ?");
 
-    expect(qb.toString()).toBe("SELECT u.*, p.* FROM users u WHERE (u.username = ?) OR (u.name = ?)");
+    expect(qb.toString()).toBe(
+      "SELECT u.*, p.* FROM users u WHERE (u.username = ?) OR (u.name = ?)",
+    );
   });
 
   it("should build SELECT with complex AND/OR WHERE conditions", () => {
@@ -119,7 +142,7 @@ describe("QueryBuilder", () => {
       .andWhere("u.name = ?");
 
     expect(qb.toString()).toBe(
-      "SELECT u.*, p.* FROM users u WHERE (((u.username = ?) AND (u.username = ?)) OR (u.name = ?)) AND (u.name = ?)"
+      "SELECT u.*, p.* FROM users u WHERE (((u.username = ?) AND (u.username = ?)) OR (u.name = ?)) AND (u.name = ?)",
     );
   });
 
@@ -166,25 +189,43 @@ describe("QueryBuilder", () => {
   it("should build SELECT with HAVING and andHaving", () => {
     const qb = new QueryBuilder();
 
-    qb.select("u.*", "p.*").from("users", "u").groupBy("u.id").having("u.name = ?").andHaving("u.username = ?");
+    qb.select("u.*", "p.*")
+      .from("users", "u")
+      .groupBy("u.id")
+      .having("u.name = ?")
+      .andHaving("u.username = ?");
 
-    expect(qb.toString()).toBe("SELECT u.*, p.* FROM users u GROUP BY u.id HAVING (u.name = ?) AND (u.username = ?)");
+    expect(qb.toString()).toBe(
+      "SELECT u.*, p.* FROM users u GROUP BY u.id HAVING (u.name = ?) AND (u.username = ?)",
+    );
   });
 
   it("should build SELECT with HAVING and orHaving", () => {
     const qb = new QueryBuilder();
 
-    qb.select("u.*", "p.*").from("users", "u").groupBy("u.id").having("u.name = ?").orHaving("u.username = ?");
+    qb.select("u.*", "p.*")
+      .from("users", "u")
+      .groupBy("u.id")
+      .having("u.name = ?")
+      .orHaving("u.username = ?");
 
-    expect(qb.toString()).toBe("SELECT u.*, p.* FROM users u GROUP BY u.id HAVING (u.name = ?) OR (u.username = ?)");
+    expect(qb.toString()).toBe(
+      "SELECT u.*, p.* FROM users u GROUP BY u.id HAVING (u.name = ?) OR (u.username = ?)",
+    );
   });
 
   it("should build SELECT with two orHaving", () => {
     const qb = new QueryBuilder();
 
-    qb.select("u.*", "p.*").from("users", "u").groupBy("u.id").orHaving("u.name = ?").orHaving("u.username = ?");
+    qb.select("u.*", "p.*")
+      .from("users", "u")
+      .groupBy("u.id")
+      .orHaving("u.name = ?")
+      .orHaving("u.username = ?");
 
-    expect(qb.toString()).toBe("SELECT u.*, p.* FROM users u GROUP BY u.id HAVING (u.name = ?) OR (u.username = ?)");
+    expect(qb.toString()).toBe(
+      "SELECT u.*, p.* FROM users u GROUP BY u.id HAVING (u.name = ?) OR (u.username = ?)",
+    );
   });
 
   it("should build SELECT with HAVING, orHaving, and andHaving (complex grouping)", () => {
@@ -198,7 +239,7 @@ describe("QueryBuilder", () => {
       .andHaving("u.username = ?");
 
     expect(qb.toString()).toBe(
-      "SELECT u.*, p.* FROM users u GROUP BY u.id HAVING ((u.name = ?) OR (u.username = ?)) AND (u.username = ?)"
+      "SELECT u.*, p.* FROM users u GROUP BY u.id HAVING ((u.name = ?) OR (u.username = ?)) AND (u.username = ?)",
     );
   });
 
@@ -221,7 +262,10 @@ describe("QueryBuilder", () => {
   it("should build SELECT with multiple addOrderBy", () => {
     const qb = new QueryBuilder();
 
-    qb.select("u.*", "p.*").from("users", "u").addOrderBy("u.name").addOrderBy("u.username", "DESC");
+    qb.select("u.*", "p.*")
+      .from("users", "u")
+      .addOrderBy("u.name")
+      .addOrderBy("u.username", "DESC");
 
     expect(qb.toString()).toBe("SELECT u.*, p.* FROM users u ORDER BY u.name, u.username DESC");
   });
@@ -280,14 +324,14 @@ describe("QueryBuilder", () => {
 
   it("should build INSERT with values", () => {
     const qb = new QueryBuilder();
-    qb.insert("users").values({ foo: "?", bar: "?" });
+    qb.insert("users").values({ bar: "?", foo: "?" });
 
-    expect(qb.toString()).toBe("INSERT INTO users (foo, bar) VALUES(?, ?)");
+    expect(qb.toString()).toBe("INSERT INTO users (bar, foo) VALUES(?, ?)");
   });
 
   it("should build INSERT with replaced values (order and overwrite)", () => {
     const qb = new QueryBuilder();
-    qb.insert("users").values({ foo: "?", bar: "?" }).values({ bar: "?", foo: "?" });
+    qb.insert("users").values({ bar: "?", foo: "?" }).values({ bar: "?", foo: "?" });
 
     expect(qb.toString()).toBe("INSERT INTO users (bar, foo) VALUES(?, ?)");
   });
@@ -306,14 +350,14 @@ describe("QueryBuilder", () => {
     expect(qb.toString()).toBe("INSERT INTO users (foo, bar) VALUES(?, ?)");
   });
 
-  it.each([{ maxResults: 10 }, { maxResults: null }])(
-    "should set and get maxResults: $maxResults",
-    ({ maxResults }) => {
-      const qb = new QueryBuilder();
-      qb.setMaxResults(maxResults);
-      expect(qb.getMaxResults()).toBe(maxResults);
-    }
-  );
+  it.each([
+    { maxResults: 10 },
+    { maxResults: null },
+  ])("should set and get maxResults: $maxResults", ({ maxResults }) => {
+    const qb = new QueryBuilder();
+    qb.setMaxResults(maxResults);
+    expect(qb.getMaxResults()).toBe(maxResults);
+  });
 
   it("should set and get firstResult", () => {
     const qb = new QueryBuilder();
@@ -328,7 +372,9 @@ describe("QueryBuilder", () => {
       .from("users", "u")
       .where("u.name = ?")
       .orderBy("u.name", "ASC");
-    expect(qb.toString()).toBe("SELECT DISTINCT u.* FROM users u WHERE u.name = ? ORDER BY u.name ASC");
+    expect(qb.toString()).toBe(
+      "SELECT DISTINCT u.* FROM users u WHERE u.name = ? ORDER BY u.name ASC",
+    );
     return qb;
   }
 
@@ -356,13 +402,15 @@ describe("QueryBuilder", () => {
         .having("COUNT(*) > ?")
         .orderBy("COUNT(*)", "DESC");
       expect(qb.toString()).toBe(
-        "SELECT u.country, COUNT(*) FROM users u GROUP BY u.country HAVING COUNT(*) > ? ORDER BY COUNT(*) DESC"
+        "SELECT u.country, COUNT(*) FROM users u GROUP BY u.country HAVING COUNT(*) > ? ORDER BY COUNT(*) DESC",
       );
       return qb;
     }
 
     const qb = prepareGroupedQueryBuilderToReset().resetHaving();
-    expect(qb.toString()).toBe("SELECT u.country, COUNT(*) FROM users u GROUP BY u.country ORDER BY COUNT(*) DESC");
+    expect(qb.toString()).toBe(
+      "SELECT u.country, COUNT(*) FROM users u GROUP BY u.country ORDER BY COUNT(*) DESC",
+    );
   });
 
   it("should reset groupBy", () => {
@@ -374,13 +422,15 @@ describe("QueryBuilder", () => {
         .having("COUNT(*) > ?")
         .orderBy("COUNT(*)", "DESC");
       expect(qb.toString()).toBe(
-        "SELECT u.country, COUNT(*) FROM users u GROUP BY u.country HAVING COUNT(*) > ? ORDER BY COUNT(*) DESC"
+        "SELECT u.country, COUNT(*) FROM users u GROUP BY u.country HAVING COUNT(*) > ? ORDER BY COUNT(*) DESC",
       );
       return qb;
     }
 
     const qb = prepareGroupedQueryBuilderToReset().resetGroupBy();
-    expect(qb.toString()).toBe("SELECT u.country, COUNT(*) FROM users u HAVING COUNT(*) > ? ORDER BY COUNT(*) DESC");
+    expect(qb.toString()).toBe(
+      "SELECT u.country, COUNT(*) FROM users u HAVING COUNT(*) > ? ORDER BY COUNT(*) DESC",
+    );
   });
 
   it("should create named parameter", () => {
@@ -444,7 +494,12 @@ describe("QueryBuilder", () => {
     const qb = new QueryBuilder();
     qb.select("COUNT(DISTINCT news.id)")
       .from("newspages", "news")
-      .innerJoin("news", "nodeversion", "nv", "nv.refId = news.id AND nv.refEntityname='Entity\\News'")
+      .innerJoin(
+        "news",
+        "nodeversion",
+        "nv",
+        "nv.refId = news.id AND nv.refEntityname='Entity\\News'",
+      )
       .innerJoin("nv", "nodetranslation", "nt", "nv.nodetranslation = nt.id")
       .innerJoin("nt", "node", "n", "nt.node = n.id")
       .where("nt.lang = ?")
@@ -454,7 +509,7 @@ describe("QueryBuilder", () => {
       "SELECT COUNT(DISTINCT news.id) FROM newspages news" +
         " INNER JOIN nodeversion nv ON nv.refId = news.id AND nv.refEntityname='Entity\\News'" +
         " INNER JOIN nodetranslation nt ON nv.nodetranslation = nt.id" +
-        " INNER JOIN node n ON nt.node = n.id WHERE (nt.lang = ?) AND (n.deleted = 0)"
+        " INNER JOIN node n ON nt.node = n.id WHERE (nt.lang = ?) AND (n.deleted = 0)",
     );
   });
 
@@ -472,7 +527,7 @@ describe("QueryBuilder", () => {
       "SELECT DISTINCT u.id FROM users u" +
         " INNER JOIN permissions p ON p.user_id = u.id, articles a" +
         " INNER JOIN comments c ON c.article_id = a.id" +
-        " WHERE (u.id = a.user_id) AND (p.read = 1)"
+        " WHERE (u.id = a.user_id) AND (p.read = 1)",
     );
   });
 
@@ -491,7 +546,7 @@ describe("QueryBuilder", () => {
         "INNER JOIN table_b b ON a.fk_b = b.id " +
         "INNER JOIN table_d d ON a.fk_d = d.id " +
         "INNER JOIN table_c c ON c.fk_b = b.id AND b.language = ? " +
-        "INNER JOIN table_e e ON e.fk_c = c.id AND e.fk_d = d.id"
+        "INNER JOIN table_e e ON e.fk_c = c.id AND e.fk_d = d.id",
     );
   });
 
@@ -514,7 +569,7 @@ describe("QueryBuilder", () => {
         "INNER JOIN table_c c ON c.fk_b = b.id AND b.language = ? " +
         "INNER JOIN table_e e ON e.fk_c = c.id AND e.fk_d = d.id, " +
         "table_f f " +
-        "INNER JOIN table_g g ON f.fk_g = g.id"
+        "INNER JOIN table_g g ON f.fk_g = g.id",
     );
   });
 
@@ -550,7 +605,7 @@ describe("QueryBuilder", () => {
       "SELECT DISTINCT users.id FROM users" +
         " INNER JOIN permissions p ON p.user_id = users.id, articles" +
         " INNER JOIN comments c ON c.article_id = articles.id" +
-        " WHERE (users.id = articles.user_id) AND (p.read = 1)"
+        " WHERE (users.id = articles.user_id) AND (p.read = 1)",
     );
   });
 
@@ -565,7 +620,7 @@ describe("QueryBuilder", () => {
     expect(qb.getSQL()).toBe(
       "SELECT u.id FROM users u" +
         " INNER JOIN permissions p ON p.user_id = u.id, articles" +
-        " INNER JOIN comments c ON c.article_id = articles.id"
+        " INNER JOIN comments c ON c.article_id = articles.id",
     );
   });
 
@@ -583,7 +638,10 @@ describe("QueryBuilder", () => {
 
   it("should build SELECT with CTE", () => {
     const cteQueryBuilder1 = new QueryBuilder();
-    cteQueryBuilder1.select("ta.id", "ta.name", "ta.table_b_id").from("table_a", "ta").where("ta.name LIKE :name");
+    cteQueryBuilder1
+      .select("ta.id", "ta.name", "ta.table_b_id")
+      .from("table_a", "ta")
+      .where("ta.name LIKE :name");
 
     const cteQueryBuilder2 = new QueryBuilder();
     cteQueryBuilder2
@@ -602,14 +660,14 @@ describe("QueryBuilder", () => {
         ", cte_b (virtual_id, virtual_name) AS " +
         "(SELECT ca.id AS virtual_id, ca.name AS virtual_name " +
         "FROM cte_a ca INNER JOIN table_b tb ON ca.table_b_id = tb.id) " +
-        "SELECT cb.* FROM cte_b cb"
+        "SELECT cb.* FROM cte_b cb",
     );
   });
 
   it("should throw if CTE columns array is empty", () => {
     const qb = new QueryBuilder();
     expect(() => qb.with("cte_a", "SELECT 1 as id", [])).toThrowError(
-      new QueryException('Columns defined in CTE "cte_a" should not be an empty array.')
+      new QueryException('Columns defined in CTE "cte_a" should not be an empty array.'),
     );
   });
 
@@ -638,8 +696,8 @@ describe("QueryBuilder", () => {
     qb.where("is_active = :isActive");
     qb.setParameter("isActive", true, ParameterType.BOOLEAN);
     expect(qb.getParameterTypes()).toEqual({
-      name: ParameterType.STRING,
       isActive: ParameterType.BOOLEAN,
+      name: ParameterType.STRING,
     });
   });
 
@@ -658,7 +716,7 @@ describe("QueryBuilder", () => {
     qb.setParameter(
       "hashes",
       [Uint8Array.from([0xde, 0xad, 0xbe, 0xef]), Uint8Array.from([0xc0, 0xde, 0xf0, 0x0d])],
-      ArrayParameterType.BINARY
+      ArrayParameterType.BINARY,
     );
 
     expect(qb.getParameterType("ids")).toBe(ArrayParameterType.INTEGER);
@@ -666,9 +724,9 @@ describe("QueryBuilder", () => {
     expect(qb.getParameterType("hashes")).toBe(ArrayParameterType.BINARY);
 
     expect(qb.getParameterTypes()).toEqual({
+      hashes: ArrayParameterType.BINARY,
       ids: ArrayParameterType.INTEGER,
       names: ArrayParameterType.STRING,
-      hashes: ArrayParameterType.BINARY,
     });
   });
 
@@ -678,8 +736,8 @@ describe("QueryBuilder", () => {
 
     expect(() => qb.getSQL()).toThrowError(
       new QueryException(
-        `The given alias "a" is not unique in FROM and JOIN clause table. The currently registered aliases are: a.`
-      )
+        `The given alias "a" is not unique in FROM and JOIN clause table. The currently registered aliases are: a.`,
+      ),
     );
   });
 
@@ -689,8 +747,8 @@ describe("QueryBuilder", () => {
 
     expect(() => qb.getSQL()).toThrowError(
       new QueryException(
-        `The given alias "c" is not part of any FROM or JOIN clause table. The currently registered aliases are: a.`
-      )
+        `The given alias "c" is not part of any FROM or JOIN clause table. The currently registered aliases are: a.`,
+      ),
     );
   });
 
@@ -700,8 +758,8 @@ describe("QueryBuilder", () => {
 
     expect(() => qb.getSQL()).toThrowError(
       new QueryException(
-        "Insufficient UNION parts given, need at least 2. Please use union() and addUnion() to set enough UNION parts."
-      )
+        "Insufficient UNION parts given, need at least 2. Please use union() and addUnion() to set enough UNION parts.",
+      ),
     );
   });
 
@@ -712,14 +770,20 @@ describe("QueryBuilder", () => {
       .setMaxResults(10)
       .setFirstResult(10);
 
-    expect(qb.getSQL()).toBe("(SELECT 1 AS field_one) UNION ALL (SELECT 2 as field_one) LIMIT 10 OFFSET 10");
+    expect(qb.getSQL()).toBe(
+      "(SELECT 1 AS field_one) UNION ALL (SELECT 2 as field_one) LIMIT 10 OFFSET 10",
+    );
   });
 
   it("should build UNION ALL query with ORDER BY", () => {
     const qb = new QueryBuilder();
-    qb.union("SELECT 1 AS field_one").addUnion("SELECT 2 as field_one", UnionType.ALL).orderBy("field_one", "ASC");
+    qb.union("SELECT 1 AS field_one")
+      .addUnion("SELECT 2 as field_one", UnionType.ALL)
+      .orderBy("field_one", "ASC");
 
-    expect(qb.getSQL()).toBe("(SELECT 1 AS field_one) UNION ALL (SELECT 2 as field_one) ORDER BY field_one ASC");
+    expect(qb.getSQL()).toBe(
+      "(SELECT 1 AS field_one) UNION ALL (SELECT 2 as field_one) ORDER BY field_one ASC",
+    );
   });
 
   it("should throw if addUnion is called before union", () => {
@@ -741,44 +805,48 @@ describe("QueryBuilder", () => {
 
   it("should build UNION query with ORDER BY", () => {
     const qb = new QueryBuilder();
-    qb.union("SELECT 1 AS field_one").addUnion("SELECT 2 as field_one", UnionType.DISTINCT).orderBy("field_one", "ASC");
-    expect(qb.getSQL()).toBe("(SELECT 1 AS field_one) UNION (SELECT 2 as field_one) ORDER BY field_one ASC");
+    qb.union("SELECT 1 AS field_one")
+      .addUnion("SELECT 2 as field_one", UnionType.DISTINCT)
+      .orderBy("field_one", "ASC");
+    expect(qb.getSQL()).toBe(
+      "(SELECT 1 AS field_one) UNION (SELECT 2 as field_one) ORDER BY field_one ASC",
+    );
   });
 
   it("should build INSERT with insertWith", () => {
     const qb = new QueryBuilder();
-    qb.insertWith("users", { foo: "bar", bar: 42 });
-    expect(qb.toString()).toBe("INSERT INTO users (foo, bar) VALUES(?, ?)");
-    expect(qb.getParameter(0)).toBe("bar");
-    expect(qb.getParameter(1)).toBe(42);
-    expect(qb.getParameters()).toStrictEqual(["bar", 42]);
+    qb.insertWith("users", { bar: 42, foo: "bar" });
+    expect(qb.toString()).toBe("INSERT INTO users (bar, foo) VALUES(?, ?)");
+    expect(qb.getParameter(1)).toBe("bar");
+    expect(qb.getParameter(0)).toBe(42);
+    expect(qb.getParameters()).toStrictEqual([42, "bar"]);
   });
 
   it("should build UPDATE with updateWith", () => {
     const qb = new QueryBuilder();
-    qb.updateWith("users", { foo: "bar", bar: 42 });
-    expect(qb.toString()).toBe("UPDATE users SET foo = ?, bar = ?");
-    expect(qb.getParameter(0)).toBe("bar");
-    expect(qb.getParameter(1)).toBe(42);
-    expect(qb.getParameters()).toStrictEqual(["bar", 42]);
+    qb.updateWith("users", { bar: 42, foo: "bar" });
+    expect(qb.toString()).toBe("UPDATE users SET bar = ?, foo = ?");
+    expect(qb.getParameter(1)).toBe("bar");
+    expect(qb.getParameter(0)).toBe(42);
+    expect(qb.getParameters()).toStrictEqual([42, "bar"]);
   });
 
   it("should build INSERT with insertWith and named parameters", () => {
     const qb = new QueryBuilder();
-    qb.insertWith("users", { foo: "bar", bar: 42 }, PlaceHolder.NAMED);
-    expect(qb.toString()).toBe("INSERT INTO users (foo, bar) VALUES(:foo, :bar)");
+    qb.insertWith("users", { bar: 42, foo: "bar" }, PlaceHolder.NAMED);
+    expect(qb.toString()).toBe("INSERT INTO users (bar, foo) VALUES(:bar, :foo)");
     expect(qb.getParameter("foo")).toBe("bar");
     expect(qb.getParameter("bar")).toBe(42);
-    expect({ ...qb.getParameters() }).toStrictEqual({ foo: "bar", bar: 42 });
+    expect({ ...qb.getParameters() }).toStrictEqual({ bar: 42, foo: "bar" });
   });
 
   it("should build UPDATE with updateWith and named parameters", () => {
     const qb = new QueryBuilder();
-    qb.updateWith("users", { foo: "bar", bar: 42 }, PlaceHolder.NAMED);
-    expect(qb.toString()).toBe("UPDATE users SET foo = :foo, bar = :bar");
+    qb.updateWith("users", { bar: 42, foo: "bar" }, PlaceHolder.NAMED);
+    expect(qb.toString()).toBe("UPDATE users SET bar = :bar, foo = :foo");
     expect(qb.getParameter("foo")).toBe("bar");
     expect(qb.getParameter("bar")).toBe(42);
-    expect({ ...qb.getParameters() }).toStrictEqual({ foo: "bar", bar: 42 });
+    expect({ ...qb.getParameters() }).toStrictEqual({ bar: 42, foo: "bar" });
   });
 
   it("should throw if insertWith is called with empty data", () => {

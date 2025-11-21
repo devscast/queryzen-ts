@@ -1,7 +1,7 @@
-import { AbstractPlatform } from "@/platforms/abstract-platform";
-import { UnionQuery } from "@/query/union-query";
-import { UnionType } from "@/query/union-type";
-import { UnionSQLBuilder } from "@/sql/builder/union-sql-builder";
+import { AbstractPlatform } from "../../platforms/abstract-platform";
+import { UnionQuery } from "../../query/union-query";
+import { UnionType } from "../../query/union-type";
+import { UnionSQLBuilder } from "./union-sql-builder";
 
 export class DefaultUnionSQLBuilder implements UnionSQLBuilder {
   constructor(private readonly platform: AbstractPlatform) {}
@@ -11,7 +11,11 @@ export class DefaultUnionSQLBuilder implements UnionSQLBuilder {
 
     for (const union of query.unionParts) {
       if (union.type !== null) {
-        parts.push(union.type === UnionType.ALL ? this.platform.getUnionAllSQL() : this.platform.getUnionDistinctSQL());
+        parts.push(
+          union.type === UnionType.ALL
+            ? this.platform.getUnionAllSQL()
+            : this.platform.getUnionDistinctSQL(),
+        );
       }
 
       parts.push(this.platform.getUnionSelectPartSQL(String(union.query)));
@@ -19,7 +23,7 @@ export class DefaultUnionSQLBuilder implements UnionSQLBuilder {
 
     const orderBy = query.orderBy;
     if (orderBy.length > 0) {
-      parts.push("ORDER BY " + orderBy.join(", "));
+      parts.push(`ORDER BY ${orderBy.join(", ")}`);
     }
 
     let sql = parts.join(" ");

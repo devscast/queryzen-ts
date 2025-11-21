@@ -1,5 +1,5 @@
-import { ForUpdate } from "@/query/for-update";
-import { Limit } from "@/query/limit";
+import { ForUpdate } from "./for-update";
+import { Limit } from "./limit";
 
 export class SelectQuery {
   constructor(
@@ -11,6 +11,6 @@ export class SelectQuery {
     public readonly having: string | null,
     public readonly orderBy: string[],
     public readonly limit: Limit,
-    public readonly forUpdate: ForUpdate | null
+    public readonly forUpdate: ForUpdate | null,
   ) {}
 }

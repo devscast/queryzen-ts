@@ -1,4 +1,4 @@
-import { AbstractPlatform } from "@/platforms/abstract-platform";
+import { AbstractPlatform } from "./abstract-platform";
 
 export class OraclePlatform extends AbstractPlatform {
   protected doModifyLimitQuery(query: string, limit: number | null, offset: number): string {

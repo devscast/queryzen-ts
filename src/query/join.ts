@@ -3,7 +3,7 @@ export class Join {
     public readonly type: "INNER" | "LEFT" | "RIGHT",
     public readonly table: string,
     public readonly alias: string,
-    public readonly condition: string | null
+    public readonly condition: string | null,
   ) {}
 
   static inner(table: string, alias: string, condition: string | null): Join {
